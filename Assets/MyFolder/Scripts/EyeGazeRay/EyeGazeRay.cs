@@ -9,6 +9,8 @@ namespace ViveSR
         {
             public class EyeGazeRay : MonoBehaviour
             {
+                public static EyeGazeRay Instance { get; private set; }
+
                 [Header("Ray Settings")]
                 public float rayLength = 25f;
                 public LineRenderer lineRenderer;
@@ -19,7 +21,7 @@ namespace ViveSR
                 private bool isHitOtherObj = false;
 
                 #region Ray:ブレ調整用
-                private Vector3 smoothedDirection = Vector3.zero;
+                public Vector3 smoothedDirection { get; private set; } = Vector3.zero;
                 public float smoothFactor = 0.15f; // 0〜1（値が小さいほど安定、ただし反応は遅くなる）
                 private Vector3 drawOrigin, drawDirection;
                 public float rayOriginOffset = 0.05f;
@@ -33,8 +35,21 @@ namespace ViveSR
 
                 #region 視線の取得用
                 private Vector3 localGazeOrigin, localGazeDirection;
-                private Vector3 rayOrigin, gazeDirection;
-                #endregion 
+                public Vector3 rayOrigin { get; private set; } = Vector3.zero;
+                public Vector3 gazeDirection { get; private set; } = Vector3.forward;
+                public bool gotGaze { get; private set; } = false;
+
+                //キャッシュ（まばたきで視線取れないとき）用
+                public Vector3 CachedGazeDirection { get; private set; } = Vector3.forward;
+                #endregion
+
+
+                void Awake()
+                {
+                    if (Instance != null && Instance != this) Destroy(this);
+                    else Instance = this;
+                }
+
 
                 private void Start()
                 {
@@ -44,7 +59,7 @@ namespace ViveSR
                 void Update()
                 {
                     // 視線取得
-                    bool gotGaze = SRanipal_Eye_v2.GetGazeRay(GazeIndex.COMBINE, out localGazeOrigin, out localGazeDirection);
+                    gotGaze = SRanipal_Eye_v2.GetGazeRay(GazeIndex.COMBINE, out localGazeOrigin, out localGazeDirection);
                     if (!gotGaze) return;
 
 
@@ -52,8 +67,12 @@ namespace ViveSR
                     rayOrigin = Camera.main.transform.position;
                     gazeDirection = Camera.main.transform.TransformDirection(localGazeDirection);
 
+                    // スムージング
+                    smoothedDirection = Vector3.Lerp(smoothedDirection, gazeDirection, smoothFactor);
+                    CachedGazeDirection = smoothedDirection; // 最後に有効だった方向を保存
+
                     // Raycast
-                    if (Physics.Raycast(rayOrigin, rayOrigin + gazeDirection * rayLength, out hit))
+                    if (Physics.Raycast(rayOrigin, rayOrigin + smoothedDirection * rayLength, out hit))
                     {
                         isHitOtherObj = true;
                         currentLookTargetName = hit.collider.gameObject.name;
@@ -67,16 +86,15 @@ namespace ViveSR
                     }
 
                     // 可視化
-                    DrawGazeRay(rayOrigin, gazeDirection);
+                    DrawGazeRay(rayOrigin);
                 }
 
-                private void DrawGazeRay(Vector3 origin, Vector3 direction)
+                private void DrawGazeRay(Vector3 origin)
                 {
                     // 毎フレーム Update
                     drawOrigin = origin - Camera.main.transform.up * rayOriginOffset;
 
-                    // スムージング
-                    smoothedDirection = Vector3.Lerp(smoothedDirection, direction, smoothFactor);
+                    
 
                     if (lineRenderer != null)
                     {
