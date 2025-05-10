@@ -126,7 +126,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4432d0a5c3283bc40b1e6e6b56ed6356, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  damage: 1
+  damage: 10
   lifetime: 5
   hitSound: {fileID: 8300000, guid: 276f5c37f7c59f340ade55b397a66c59, type: 3}
   audioSourcePrefab: {fileID: 3306557500339781144}

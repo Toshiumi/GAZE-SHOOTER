@@ -27,6 +27,11 @@ public class Bullet : MonoBehaviour
                 audio.Play();
                 Destroy(audio.gameObject, hitSound.length);
             }
+
+            //スコア加算
+            if (ScoreManager.Instance != null)
+                ScoreManager.Instance.AddBulletHitScore();
+
         }
 
         Destroy(gameObject);

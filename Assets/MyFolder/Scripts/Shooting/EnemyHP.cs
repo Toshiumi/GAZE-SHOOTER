@@ -1,11 +1,12 @@
-using System.Collections;
-using UnityEngine;
+Ôªøusing UnityEngine;
 using UnityEngine.UI;
+using System.Collections;
 
 public class EnemyHP : MonoBehaviour
 {
     public int maxHP = 3;
     private int currentHP;
+    private float spawnTime;
 
     public Renderer targetRenderer;
     public Color hitColor = Color.red;
@@ -22,6 +23,7 @@ public class EnemyHP : MonoBehaviour
     void Start()
     {
         currentHP = maxHP;
+        spawnTime = Time.time;
 
         if (targetRenderer == null)
             targetRenderer = GetComponentInChildren<Renderer>();
@@ -29,13 +31,15 @@ public class EnemyHP : MonoBehaviour
         if (targetRenderer != null)
             originalColor = targetRenderer.material.color;
 
-        // HPÉoÅ[ÇÃê∂ê¨Ç∆îzíu
         if (hpBarPrefab != null)
         {
             hpBarInstance = Instantiate(hpBarPrefab, transform).transform;
-            hpBarInstance.localPosition = new Vector3(0f, -1.0f, 0f); // ë´å≥Ç…îzíuÅií≤êÆâ¬Åj
-            hpFill = hpBarInstance.Find("HPFill").GetComponent<Image>(); // HPBarCanvas ì‡ÇÃ "HPFill" Ç∆Ç¢Ç§ñºëOÇÃéqÉIÉuÉWÉFÉNÉgÇíTÇ∑
+            float scaleFactor = 1f / transform.lossyScale.x;
+            hpBarInstance.localScale = Vector3.one * scaleFactor;
+            hpBarInstance.localPosition = new Vector3(0f, -scaleFactor, 0f);
+            
 
+            hpFill = hpBarInstance.Find("HPFill").GetComponent<Image>();
         }
     }
 
@@ -43,18 +47,25 @@ public class EnemyHP : MonoBehaviour
     {
         currentHP -= damage;
 
-        // ÉqÉbÉgââèo
+        // ‚úÖ „Çπ„Ç≥„Ç¢Âä†ÁÆóÔºö„ÉÄ„É°„Éº„Ç∏
+        if (ScoreManager.Instance != null)
+        {
+            ScoreManager.Instance.AddDamageScore(damage);
+            ScoreManager.Instance.ShowScorePopup(damage * 10, transform.position + Vector3.up * 1.5f);
+        }
+
+
+        // „Éí„ÉÉ„ÉàÊºîÂá∫
         if (targetRenderer != null)
         {
             if (flashRoutine != null) StopCoroutine(flashRoutine);
             flashRoutine = StartCoroutine(FlashColor());
         }
 
-        // HPÉoÅ[çXêV
+        // HP„Éê„ÉºÊõ¥Êñ∞
         if (hpFill != null)
         {
             hpFill.fillAmount = Mathf.Clamp01((float)currentHP / maxHP);
-            Debug.Log("teetetet");
         }
 
         if (currentHP <= 0)
@@ -72,6 +83,17 @@ public class EnemyHP : MonoBehaviour
 
     private void Die()
     {
+        // ‚úÖ „Çπ„Ç≥„Ç¢Âä†ÁÆóÔºöÊíÉÁ†¥
+        if (ScoreManager.Instance != null)
+        {
+            bool isMoving = GetComponent<EnemyMovement>() != null;
+            float killDuration = Time.time - spawnTime;
+
+            ScoreManager.Instance.RegisterKill(isMoving, killDuration);
+            ScoreManager.Instance.ShowScorePopup(300, transform.position + Vector3.up * 2f);
+
+        }
+
         Destroy(gameObject);
     }
 }

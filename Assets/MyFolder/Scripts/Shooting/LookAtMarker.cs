@@ -6,7 +6,7 @@ public class LookAtMarker : MonoBehaviour
     public float disappearSpeed = 12f;
     public float pulseAmplitude = 0.1f;
     public float pulseFrequency = 2f;
-    public float maxScale = 0.05f;
+    public float maxScale = 0.5f;
 
     private bool isVisible = false;
     private Vector3 baseScale;
