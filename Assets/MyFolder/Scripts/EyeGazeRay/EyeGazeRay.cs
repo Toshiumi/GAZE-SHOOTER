@@ -11,14 +11,19 @@ namespace ViveSR
             {
                 public static EyeGazeRay Instance { get; private set; }
 
+                #region Ray:長さ調整用
                 [Header("Ray Settings")]
                 public float rayLength = 25f;
                 public LineRenderer lineRenderer;
+                #endregion
 
-                private RaycastHit hit;
+                #region Ray:ターゲット情報用
+                public RaycastHit gazeHit;
                 private string currentLookTargetName;
                 private float targetDistance;
                 private bool isHitOtherObj = false;
+                public bool IsHittingEnemy { get; private set; }
+                #endregion
 
                 #region Ray:ブレ調整用
                 public Vector3 smoothedDirection { get; private set; } = Vector3.zero;
@@ -71,18 +76,23 @@ namespace ViveSR
                     smoothedDirection = Vector3.Lerp(smoothedDirection, gazeDirection, smoothFactor);
                     CachedGazeDirection = smoothedDirection; // 最後に有効だった方向を保存
 
-                    // Raycast
-                    if (Physics.Raycast(rayOrigin, rayOrigin + smoothedDirection * rayLength, out hit))
+                    // Raycastして当たってるか判定
+                    if (Physics.Raycast(rayOrigin, smoothedDirection, out gazeHit, rayLength))
                     {
                         isHitOtherObj = true;
-                        currentLookTargetName = hit.collider.gameObject.name;
-                        targetDistance = hit.distance;
-                        
+                        currentLookTargetName = gazeHit.collider.gameObject.name;
+                        targetDistance = gazeHit.distance;
+
+                        // 敵に当たった場合
+                        IsHittingEnemy = gazeHit.transform.CompareTag("Enemy");
+
                     }
                     else
                     {
                         isHitOtherObj = false;
                         targetDistance = rayLength;
+
+                        IsHittingEnemy = false;
                     }
 
                     // 可視化
@@ -93,8 +103,6 @@ namespace ViveSR
                 {
                     // 毎フレーム Update
                     drawOrigin = origin - Camera.main.transform.up * rayOriginOffset;
-
-                    
 
                     if (lineRenderer != null)
                     {
