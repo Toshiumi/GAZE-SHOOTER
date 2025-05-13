@@ -83,6 +83,8 @@ namespace ViveSR
                         currentLookTargetName = gazeHit.collider.gameObject.name;
                         targetDistance = gazeHit.distance;
 
+                        //Debug.Log("Raycast hit: " + gazeHit.collider.gameObject.name); // ←追加
+
                         // 敵に当たった場合
                         IsHittingEnemy = gazeHit.transform.CompareTag("Enemy");
 

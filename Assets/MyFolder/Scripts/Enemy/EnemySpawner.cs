@@ -28,6 +28,8 @@ public class EnemySpawner : MonoBehaviour
     public float minVerticalAngle = 20f;
     public float maxVerticalAngle = 70f;
 
+    public SpawnManager spawnManger;
+
 
     public async UniTaskVoid SpawnEnemies()
     {
@@ -48,8 +50,11 @@ public class EnemySpawner : MonoBehaviour
                 continue;
             }
 
-            Instantiate(prefab, spawnPos, Quaternion.identity);
-
+            if (spawnManger.autoSpawn)
+            {
+                Instantiate(prefab, spawnPos, Quaternion.identity);
+                GameManager.Instance.RegisterEnemy();
+            }
             
 
             await UniTask.Delay(TimeSpan.FromSeconds(spawnWaitTime));

@@ -20,8 +20,11 @@ public class EnemyHP : MonoBehaviour
     private Image hpFill;
     private Transform hpBarInstance;
 
+    public GameObject gmObj;
+
     void Start()
     {
+
         currentHP = maxHP;
         spawnTime = Time.time;
 
@@ -94,6 +97,7 @@ public class EnemyHP : MonoBehaviour
 
         }
 
+        GameManager.Instance.UnregisterEnemy();
         Destroy(gameObject);
     }
 }

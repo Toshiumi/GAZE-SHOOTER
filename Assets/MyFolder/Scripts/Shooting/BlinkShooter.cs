@@ -12,6 +12,15 @@ public class BlinkShooter : MonoBehaviour
 
     private bool wasEyeOpenLastFrame = true;
     private EyeData_v2 eyeData = new EyeData_v2();
+    public float BlinkDuration { get; private set; } = 0f;
+    public bool IsBothEyesClosed { get; private set; } = false;
+    public static BlinkShooter Instance { get; internal set; }
+
+    void Awake()
+    {
+        if (Instance != null && Instance != this) Destroy(this);
+        else Instance = this;
+    }
 
     void Update()
     {
@@ -19,14 +28,19 @@ public class BlinkShooter : MonoBehaviour
 
         float leftOpenness = eyeData.verbose_data.left.eye_openness;
         float rightOpenness = eyeData.verbose_data.right.eye_openness;
-        bool eyesClosed = leftOpenness < 0.3f && rightOpenness < 0.3f;
+        IsBothEyesClosed = leftOpenness < 0.3f && rightOpenness < 0.3f;
 
-        if (wasEyeOpenLastFrame && eyesClosed)
+        if (IsBothEyesClosed)
+            BlinkDuration += Time.deltaTime;
+        else
+            BlinkDuration = 0f;
+
+        if (wasEyeOpenLastFrame && IsBothEyesClosed)
         {
             FireBullet();
         }
 
-        wasEyeOpenLastFrame = !eyesClosed;
+        wasEyeOpenLastFrame = !IsBothEyesClosed;
     }
 
     void FireBullet()
